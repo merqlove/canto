@@ -30,20 +30,17 @@ class Canto
         puts "Signal #{sig} not supported"
       end
 
-      launch(self_read, launcher)
+      launch(self_read)
     end
 
-    def launch(self_read, launcher)
+    def launch(self_read)
       begin
-        launcher.run
-
         while (readable_io = IO.select([self_read]))
           signal = readable_io.first[0].gets.strip
           handle_signal(signal)
         end
       rescue Interrupt
         Canto.logger.info 'Shutting down'
-        launcher.stop
         Canto.logger.info 'Bye!'
 
         # Explicitly exit so busy Processor threads won't block process shutdown.
@@ -53,8 +50,6 @@ class Canto
         # use the TTIN signal to determine where things are stuck.
         exit(0)
       end
-
-      yield
     end
 
     SIGNAL_HANDLERS = {
