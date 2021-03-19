@@ -74,7 +74,7 @@ module Canto
           end
         end
       }
-    }.freeze
+    }
     UNHANDLED_SIGNAL_HANDLER = ->(_) { Canto.logger.info 'No signal handler registered, ignoring' }
     SIGNAL_HANDLERS.default = UNHANDLED_SIGNAL_HANDLER
 
