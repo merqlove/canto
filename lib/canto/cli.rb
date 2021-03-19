@@ -4,7 +4,7 @@ require 'fileutils'
 
 $stdout.sync = true
 
-class Canto
+module Canto
   class CLI
     include Singleton
 
