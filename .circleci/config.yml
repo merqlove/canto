@@ -1,0 +1,39 @@
+version: 2.1
+orbs:
+  ruby: circleci/ruby@1.0.0
+
+jobs:
+  build:
+    docker:
+      - image: circleci/ruby:2.7.2
+
+    steps:
+      - checkout
+      - ruby/install-deps
+
+  minitest:
+    docker:
+      - image: circleci/ruby:2.7.2
+        environment:
+          BUNDLE_JOBS: 3
+          BUNDLE_RETRY: 3
+          BUNDLE_PATH: vendor/bundle
+
+    steps:
+      - checkout
+      - ruby/install-deps
+
+      - run:
+          name: Stale code fix
+          command: git fetch && git reset --hard origin/${CIRCLE_BRANCH}
+      - run:
+          name: Minitest
+          command: bundle exec rake test
+
+workflows:
+  tests:
+    jobs:
+      - build
+      - minitest:
+          requires:
+            - build

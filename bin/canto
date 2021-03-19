@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/canto'
+require_relative '../lib/canto/cli'
+
+begin
+  cli = Canto::CLI.instance
+  cli.parse
+  cli.run
+rescue => e
+  raise e if $DEBUG
+
+  exit 1
+end
