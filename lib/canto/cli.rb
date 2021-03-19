@@ -1,6 +1,7 @@
 require 'singleton'
 require 'optparse'
 require 'fileutils'
+require 'logger'
 
 $stdout.sync = true
 
@@ -20,7 +21,7 @@ module Canto
       validate!
     end
 
-    def run(launcher, boot_app: true)
+    def run(boot_app: true)
       boot_application if boot_app
 
       self_read, self_write = IO.pipe
@@ -43,8 +44,8 @@ module Canto
           handle_signal(signal)
         end
       rescue Interrupt
-        Canto.logger.info 'Shutting down'
-        Canto.logger.info 'Bye!'
+        CLI.logger.info 'Shutting down'
+        CLI.logger.info 'Bye!'
 
         # Explicitly exit so busy Processor threads won't block process shutdown.
         #
@@ -62,24 +63,24 @@ module Canto
       # Heroku sends TERM and then waits 30 seconds for process to exit.
       'TERM' => ->(_) { raise Interrupt },
       'TSTP' => ->(_) {
-        Canto.logger.info 'Received TSTP, no longer accepting new work'
+        CLI.logger.info 'Received TSTP, no longer accepting new work'
       },
       'TTIN' => ->(_) {
         Thread.list.each do |thread|
-          Canto.logger.warn "Thread TID-#{(thread.object_id ^ ::Process.pid).to_s(36)} #{thread.name}"
+          CLI.logger.warn "Thread TID-#{(thread.object_id ^ ::Process.pid).to_s(36)} #{thread.name}"
           if thread.backtrace
-            Canto.logger.warn thread.backtrace.join("\n")
+            CLI.logger.warn thread.backtrace.join("\n")
           else
-            Canto.logger.warn '<no backtrace available>'
+            CLI.logger.warn '<no backtrace available>'
           end
         end
       }
     }
-    UNHANDLED_SIGNAL_HANDLER = ->(_) { Canto.logger.info 'No signal handler registered, ignoring' }
+    UNHANDLED_SIGNAL_HANDLER = ->(_) { CLI.logger.info 'No signal handler registered, ignoring' }
     SIGNAL_HANDLERS.default = UNHANDLED_SIGNAL_HANDLER
 
     def handle_signal(sig)
-      Canto.logger.debug "Got #{sig} signal"
+      CLI.logger.debug "Got #{sig} signal"
       SIGNAL_HANDLERS[sig].call(self)
     end
 
@@ -99,12 +100,14 @@ module Canto
       opts
     end
 
+    alias_method :die, :exit
+
     def set_environment(cli_env)
       @environment = cli_env || ENV['APP_ENV'] || ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
     end
 
     def initialize_logger
-      Canto.logger = Logger.new($stdout, level: Logger::INFO)
+      CLI.logger = Logger.new($stdout, level: Logger::INFO)
     end
 
     def boot_application
@@ -116,11 +119,11 @@ module Canto
     def validate!
       if !File.exist?(options[:require]) ||
           (File.directory?(options[:require]) && !File.exist?("#{options[:require]}/config/application.rb"))
-        Canto.logger.info '=================================================================='
-        Canto.logger.info '  Please point Canto to Ruby file  '
-        Canto.logger.info '  to load your classes with -r [FILE].'
-        Canto.logger.info '=================================================================='
-        Canto.logger.info @parser
+        CLI.logger.info '=================================================================='
+        CLI.logger.info '  Please point Canto to Ruby file  '
+        CLI.logger.info '  to load your classes with -r [FILE].'
+        CLI.logger.info '=================================================================='
+        CLI.logger.info @parser
         die(1)
       end
     end
@@ -143,7 +146,7 @@ module Canto
 
       parser.banner = 'canto [options]'
       parser.on_tail '-h', '--help', 'Show help' do
-        Canto.logger.info parser
+        CLI.logger.info parser
         die 1
       end
 
