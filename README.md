@@ -1,5 +1,8 @@
 # Canto
 
+[![CircleCI](https://circleci.com/gh/merqloveu/canto.svg?style=svg)](https://circleci.com/gh/merqloveu/canto)
+[![Gem Version](https://badge.fury.io/rb/canto.svg)](https://badge.fury.io/rb/canto)
+
 Canto is a tool to run plain non-blocking ruby programs, like pubsub.
 Canto has simple IO.pipe interface, watching for signals, makes your non-blocking running.
 

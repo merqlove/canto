@@ -8,12 +8,15 @@ class Canto
   class CLI
     include Singleton
 
-    attr_reader :logger
+    class << self
+      attr_accessor :logger
+    end
+
     attr_accessor :environment
 
     def parse(args = ARGV)
-      setup_options(args)
       initialize_logger
+      setup_options(args)
       validate!
     end
 
@@ -101,7 +104,7 @@ class Canto
     end
 
     def initialize_logger
-      @logger = Logger.new($stdout, level: Logger::INFO)
+      Canto.logger = Logger.new($stdout, level: Logger::INFO)
     end
 
     def boot_application
@@ -113,11 +116,11 @@ class Canto
     def validate!
       if !File.exist?(options[:require]) ||
           (File.directory?(options[:require]) && !File.exist?("#{options[:require]}/config/application.rb"))
-        logger.info '=================================================================='
-        logger.info '  Please point Canto to Ruby file  '
-        logger.info '  to load your classes with -r [FILE].'
-        logger.info '=================================================================='
-        logger.info @parser
+        Canto.logger.info '=================================================================='
+        Canto.logger.info '  Please point Canto to Ruby file  '
+        Canto.logger.info '  to load your classes with -r [FILE].'
+        Canto.logger.info '=================================================================='
+        Canto.logger.info @parser
         die(1)
       end
     end
@@ -140,7 +143,7 @@ class Canto
 
       parser.banner = 'canto [options]'
       parser.on_tail '-h', '--help', 'Show help' do
-        logger.info parser
+        Canto.logger.info parser
         die 1
       end
 
