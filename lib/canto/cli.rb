@@ -84,6 +84,10 @@ module Canto
       SIGNAL_HANDLERS[sig].call(self)
     end
 
+    def options
+      @options ||= Canto::DEFAULTS
+    end
+
     def setup_options(args)
       # parse CLI options
       opts = parse_options(args)
